@@ -13,7 +13,8 @@ class GridSimulator:
         self.now_s+=seconds; return self.now_s
     def operate_switch(self,branch_id: str,state: SwitchState):
         if branch_id not in self.snapshot.branches: raise KeyError(branch_id)
-        if state==SwitchState.CLOSED and self.snapshot.switch_state.get(branch_id)==SwitchState.OPEN and would_create_cycle(self.snapshot,branch_id): raise ValueError("cycle")
+        br=self.snapshot.branches[branch_id]
+        if state==SwitchState.CLOSED and self.snapshot.resolved_switch_state(br)==SwitchState.OPEN and would_create_cycle(self.snapshot,branch_id): raise ValueError("cycle")
         self.snapshot.switch_state[branch_id]=state
         self.log.append(Event(self.now_s,"switch",branch_id,state.value))
         return state

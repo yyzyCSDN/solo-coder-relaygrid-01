@@ -42,9 +42,22 @@ class FeederSnapshot:
     branches: dict[str, Branch] = field(default_factory=dict)
     switch_state: dict[str, SwitchState] = field(default_factory=dict)
 
+    def resolved_switch_state(self, branch: Branch) -> SwitchState:
+        """Resolve the effective state of a switchable branch.
+
+        Real-time telemetry (``switch_state``) always wins. When the static
+        model carries no telemetry, fall back to the designed normal state:
+        a normally-open tie must resolve OPEN, never default to CLOSED.
+        """
+        if branch.branch_id in self.switch_state:
+            return self.switch_state[branch.branch_id]
+        return SwitchState.CLOSED if branch.normally_closed else SwitchState.OPEN
+
     def closed_branches(self) -> Iterable[Branch]:
         for br in self.branches.values():
-            if not br.switchable or self.switch_state.get(br.branch_id, SwitchState.CLOSED) == SwitchState.CLOSED:
+            if not br.switchable:
+                yield br
+            elif self.resolved_switch_state(br) == SwitchState.CLOSED:
                 yield br
 
     def copy(self) -> "FeederSnapshot":

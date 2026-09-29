@@ -2,12 +2,11 @@ from __future__ import annotations
 from relaygrid.models import FeederSnapshot, SwitchState
 
 def energized_edges(snapshot: FeederSnapshot):
-    out=[]
-    for br in snapshot.branches.values():
-        if br.switchable and snapshot.switch_state.get(br.branch_id, SwitchState.CLOSED) != SwitchState.CLOSED:
-            continue
-        out.append((br.branch_id, br.source, br.target))
-    return out
+    """Edges in the energized graph under the unified normal-state resolution."""
+    return [
+        (br.branch_id, br.source, br.target)
+        for br in snapshot.closed_branches()
+    ]
 
 def would_create_cycle(snapshot: FeederSnapshot, branch_id: str) -> bool:
     if branch_id not in snapshot.branches:
