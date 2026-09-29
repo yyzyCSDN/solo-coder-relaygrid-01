@@ -4,7 +4,7 @@ from relaygrid.models import FeederSnapshot, SwitchState
 def energized_edges(snapshot: FeederSnapshot):
     out=[]
     for br in snapshot.branches.values():
-        if br.switchable and snapshot.switch_state.get(br.branch_id, SwitchState.CLOSED) != SwitchState.CLOSED:
+        if not snapshot.is_closed(br):
             continue
         out.append((br.branch_id, br.source, br.target))
     return out
